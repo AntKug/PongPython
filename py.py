@@ -3,7 +3,7 @@ import json
 import time
 import random
 
-# ustawienia ekranu
+# Settings
 WIDTH = 60
 HEIGHT = 20
 PADDLE_HEIGHT = 5
@@ -15,13 +15,13 @@ class PongGame:
     def __init__(self, screen):
         self.screen = screen
         self.screen.timeout(0)
-        curses.curs_set(0)  # Hide cursor
+        curses.curs_set(0)
 
-        # Initialize paddles and ball
+        # Create Paddle and ballw
         self.left_paddle_y = HEIGHT // 2 - PADDLE_HEIGHT // 2
         self.right_paddle_y = HEIGHT // 2 - PADDLE_HEIGHT // 2
         self.ball_x, self.ball_y = WIDTH // 2, HEIGHT // 2
-        self.ball_dx, self.ball_dy = random.choice([-1, 1]), random.choice([-1, 1])
+        self.ball_dx, self.ball_dy = random.choice([-1, 1]), random.choice([-1, 1]) # physics 
         self.ball_speed = 0.1
 
         # Scores
@@ -31,18 +31,18 @@ class PongGame:
     def draw(self):
         self.screen.clear()
 
-        # Draw borders
+        # Draw Box
         for x in range(WIDTH):
-            self.screen.addch(0, x, "-")
-            self.screen.addch(HEIGHT - 1, x, "-")
+            self.screen.addch(0, x, "*")
+            self.screen.addch(HEIGHT - 1, x, "*")
         for y in range(HEIGHT):
-            self.screen.addch(y, 0, "|")
-            self.screen.addch(y, WIDTH - 1, "|")
+            self.screen.addch(y, 0, "*")
+            self.screen.addch(y, WIDTH - 1, "*")
 
         # Draw paddles
         for i in range(PADDLE_HEIGHT):
-            self.screen.addch(self.left_paddle_y + i, 1, "|")
-            self.screen.addch(self.right_paddle_y + i, WIDTH - 2, "|")
+            self.screen.addch(self.left_paddle_y + i, 1, "X")
+            self.screen.addch(self.right_paddle_y + i, WIDTH - 2, "X")
 
         # Draw ball
         self.screen.addch(self.ball_y, self.ball_x, "O")
