@@ -12,16 +12,17 @@ MAX_SCORE = 5
 LEADERBOARD_FILE = "wynik.json"
 
 class PongGame:
-    def __init__(self, screen):
+    def __init__(self, screen, mode):
         self.screen = screen
+        self.mode = mode  # AI or Multi 
         self.screen.timeout(0)
         curses.curs_set(0)
 
-        # Create Paddle and ballw
+        # Create Paddle and ball
         self.left_paddle_y = HEIGHT // 2 - PADDLE_HEIGHT // 2
         self.right_paddle_y = HEIGHT // 2 - PADDLE_HEIGHT // 2
         self.ball_x, self.ball_y = WIDTH // 2, HEIGHT // 2
-        self.ball_dx, self.ball_dy = random.choice([-1, 1]), random.choice([-1, 1]) # physics 
+        self.ball_dx, self.ball_dy = random.choice([-1, 1]), random.choice([-1, 1])
         self.ball_speed = 0.1
 
         # Scores
@@ -55,20 +56,31 @@ class PongGame:
 
     def handle_input(self):
         key = self.screen.getch()
-        if key == curses.KEY_UP and self.right_paddle_y > 1:
-            self.right_paddle_y -= 1
-        elif key == curses.KEY_DOWN and self.right_paddle_y < HEIGHT - PADDLE_HEIGHT - 1:
-            self.right_paddle_y += 1
-        elif key == ord('w') and self.left_paddle_y > 1:
+        if self.mode == "Multiplayer":
+            # Multiplayer logic
+            if key == curses.KEY_UP and self.right_paddle_y > 1:
+                self.right_paddle_y -= 1
+            elif key == curses.KEY_DOWN and self.right_paddle_y < HEIGHT - PADDLE_HEIGHT - 1:
+                self.right_paddle_y += 1
+        elif self.mode == "AI":
+            # AI player logic
+            if self.ball_y < self.right_paddle_y and self.right_paddle_y > 1:
+                self.right_paddle_y -= 1
+            elif self.ball_y > self.right_paddle_y + PADDLE_HEIGHT - 1 and self.right_paddle_y < HEIGHT - PADDLE_HEIGHT - 1:
+                self.right_paddle_y += 1
+
+        # Player 1 logic        
+        if key == ord('w') and self.left_paddle_y > 1:
             self.left_paddle_y -= 1
         elif key == ord('s') and self.left_paddle_y < HEIGHT - PADDLE_HEIGHT - 1:
             self.left_paddle_y += 1
 
     def update_ball(self):
+        # Ball movement
         self.ball_x += self.ball_dx
         self.ball_y += self.ball_dy
 
-        # Ball collision with top and bottom walls
+        # Ball collision
         if self.ball_y <= 1 or self.ball_y >= HEIGHT - 2:
             self.ball_dy = -self.ball_dy
 
@@ -80,7 +92,7 @@ class PongGame:
             self.ball_dx = -self.ball_dx
             self.ball_speed = max(self.ball_speed - BALL_SPEED_INCREMENT, 0.05)
 
-        # Ball goes out of bounds
+        # Ball scores
         if self.ball_x <= 0:
             self.right_score += 1
             self.reset_ball()
@@ -89,11 +101,13 @@ class PongGame:
             self.reset_ball()
 
     def reset_ball(self):
+        # Reset ball
         self.ball_x, self.ball_y = WIDTH // 2, HEIGHT // 2
         self.ball_dx, self.ball_dy = random.choice([-1, 1]), random.choice([-1, 1])
         self.ball_speed = 0.1
 
     def save_leaderboard(self, winner):
+        # Leaderboard
         try:
             with open(LEADERBOARD_FILE, "r") as file:
                 leaderboard = json.load(file)
@@ -106,6 +120,7 @@ class PongGame:
             json.dump(leaderboard, file)
 
     def play(self):
+        # Main game loop
         while True:
             self.handle_input()
             self.update_ball()
@@ -127,9 +142,24 @@ class PongGame:
 
             time.sleep(self.ball_speed)
 
-# Run the game
+def main_menu(stdscr):
+    curses.curs_set(0)
+    stdscr.clear()
+    stdscr.addstr(HEIGHT // 2 - 2, WIDTH // 2 - 10, "Pong THE Game")
+    stdscr.addstr(HEIGHT // 2, WIDTH // 2 - 15, "Press 1 for AI")
+    stdscr.addstr(HEIGHT // 2 + 1, WIDTH // 2 - 15, "Press 2 for Multiplayer Mode")
+    stdscr.refresh()
+
+    while True:
+        key = stdscr.getch()
+        if key == ord('1'):
+            return "AI"
+        elif key == ord('2'):
+            return "Multiplayer"
+
 def main(stdscr):
-    game = PongGame(stdscr)
+    mode = main_menu(stdscr)
+    game = PongGame(stdscr, mode)
     game.play()
 
 curses.wrapper(main)
